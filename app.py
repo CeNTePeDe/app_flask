@@ -1,38 +1,51 @@
-from flask import Flask, render_template, url_for, request, flash
+import os
+import sqlite3
+from flask import Flask, render_template, request, g
 
-app = Flask('__name__')
-app.config['SECRET_KEY'] = 'SKJAHcgclugscKZcnisijd'
-menu = [{'name': 'Setup', 'url': 'install'},
-        {'name': 'First app', 'url': 'first-app'},
-        {'name': 'Feedback', 'url': 'feedback'}]
+# configuration
+DATABASE = 'temp/flsite.db'
+DEBUG = True
+SECRET_KEY = 'bvakajv;odhICkmcPLC'
+
+app = Flask(__name__)
+app.config.from_object(__name__)
+
+app.config.update(dict(DATABASE=os.path.join(app.root_path, 'flsite.db')))
+
+
+def connect_db():
+    conn = sqlite3.connect(app.config['DATABASE'])
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def create_db():
+    db = connect_db()
+    with app.open_resource('sql_db.sql', mode='r') as f:
+        db.cursor().executescript(f.read())
+    db.commit()
+    db.close()
+
+
+def get_db():
+    # connection with database
+    if not hasattr(g, 'link_db'):
+        g.link_db = connect_db()
+    return g.link_db
 
 
 @app.route('/')
 def index():
-    print(url_for('index'))
-    return render_template('index.html', title="Diary", menu=menu)
+    db = get_db()
+    return render_template('index.html', title="Diary", menu=[])
 
 
-@app.route('/about')
-def about():
-    print(url_for('about'))
-    return render_template('about.html', title='Personal page')
+@app.teardown_appcontext
+def close_db():
+    # close connection
+    if hasattr(g, 'limk_db'):
+        g.limk_db.close()
 
-
-@app.route('/feedback', methods=['POST', 'GET'])
-def feedback():
-    if request.method == 'POST':
-        print(request.form['username'])
-        if len(request.form['username']) > 2:
-            flash('Massage send', category='success')
-        else:
-            flash('error', category='error')
-    return render_template('feedback.html', title='feedback', menu=menu)
-
-
-# with app.test_request_context():
-#    print(url_for('index'))
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
+# if __name__ == '__main__':
+#    app.run(debug=True)
+#
