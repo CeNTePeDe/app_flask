@@ -15,9 +15,9 @@
     {% block content -%}
         {%- block mainmenu -%}
             <ul class="mainmenu">
-                {% for m in menu -%}
-                <li><a href="{{ m.url }}">{{m.name}}</a></li>
-                {% endfor -%}
+                <li><a href="{{url_for('index')}}">Main</a></li>
+                <li><a href="{{url_for('addPost')}}">Add Post</a></li>
+
             </ul>
         {% endblock mainmenu -%}
 
@@ -29,7 +29,7 @@
         <h1>Diary - app</h1>
     {% endif -%}
 
-    {% endblock %}
+    {% endblock content %}
     </div>
 
 </body>
